@@ -37,6 +37,7 @@
     -webkit-font-smoothing:antialiased;
   }
   a{color:inherit;text-decoration:none}
+  a.ctc-link:hover{text-decoration:underline;text-underline-offset:3px}
   button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 
   /* CRT overlays */
@@ -207,8 +208,8 @@
   .spark svg{flex:1;height:18px}
   .spark .n{color:var(--g);min-width:36px;text-align:right;font-weight:500}
 
-  /* DEPLOYMENTS — bottom left mid */
-  .p-dp{grid-column:1 / span 4;grid-row:8 / span 5}
+  /* DEPLOYMENTS — bottom right */
+  .p-dp{grid-column:10 / span 3;grid-row:8 / span 5}
   .p-dp .scroll{flex:1;overflow:hidden}
   .p-dp .row{font-size:11.5px}
   .tag{display:inline-block;padding:1px 5px;font-size:9.5px;letter-spacing:.12em;font-weight:600}
@@ -236,7 +237,7 @@
   .p-ob .row .v{font-size:11px}
 
   /* CONTACT / signal */
-  .p-ct{grid-column:10 / span 3;grid-row:8 / span 5}
+  .p-ct{grid-column:1 / span 4;grid-row:8 / span 5}
   .p-ct .row{font-size:11.5px;padding:3px 0}
   .p-ct .row b{color:var(--cy)}
   .p-ct .row .v{color:var(--am)}
@@ -502,7 +503,7 @@
 
     <!-- DEPLOYMENTS -->
     <section class="pnl p-dp reveal">
-      <div class="ph"><span class="nm">0005 / DEP <em>deployments &amp; holdings</em></span><span class="fn"><b>F5</b></span></div>
+      <div class="ph"><span class="nm">0005 / DEP <em>deployments &amp; holdings</em></span><span class="fn"><b>F6</b></span></div>
       <div class="scroll">
         <div class="row dotted"><span style="color:var(--am)">› qualitech-ai-automation</span><span class="tag stg">BUILDING</span></div>
         <div class="row dotted"><span style="color:var(--am)">› BriefNote</span><span class="tag dev">MVP</span></div>
@@ -511,7 +512,7 @@
         <div class="row dotted"><span style="color:var(--am)">› 5th place best ML</span><span class="tag prod">HACKATHON</span></div>
         <div class="row dotted"><span style="color:var(--am)">› FootballVision - Computer Vision</span><span class="tag stg">SCHOOL</span></div>
         <div class="row dotted"><span style="color:var(--am)">› Mealprep Planner Website</span><span class="tag prod">PERSONAL</span></div>
-        <div class="row dotted"><b style="color:var(--cy)">uptime · 30d (placeholder values for now)</b><span class="v up">99.4%</span></div>
+        <div class="row dotted"><b style="color:var(--cy)">uptime · 30d</b><span class="v up">99.4%</span></div>
         <div class="row dotted"><b style="color:var(--cy)">commits · 30d</b><span class="v up">142</span></div>
         <div class="row"><b style="color:var(--cy)">PRs merged · 30d</b><span class="v up">28</span></div>
       </div>
@@ -519,7 +520,7 @@
 
     <!-- NEWS WIRE -->
     <section class="pnl p-nw reveal">
-      <div class="ph"><span class="nm">0006 / NW <em>news wire · ZNOEL</em></span><span class="fn"><b>F6</b></span></div>
+      <div class="ph"><span class="nm">0006 / NW <em>news wire · ZNOEL</em></span><span class="fn"><b>F5</b></span></div>
       <ul>
         <li><span class="ts">11:18</span><span class="src">BBG</span><span class="star">★</span><b>ZNOEL</b> Has officially joined QualitechLM for this summer</li>
         <li><span class="ts">10:41</span><span class="src">RTRS</span><b>@QualiTech</b> Building an Ai automation platform</li>
@@ -548,13 +549,13 @@
 
     <!-- CONTACT -->
     <section class="pnl p-ct reveal">
-      <div class="ph"><span class="nm">0009 / CTC <em>contact desk</em></span><span class="fn"><b>F9</b></span></div>
+      <div class="ph"><span class="nm">0009 / CTC <em>contact desk</em></span><span class="fn"><b>F4</b></span></div>
       <div class="row dotted"><b>mail</b><span class="v">zacharie.noel@mail.mcgill.ca</span></div>
-      <div class="row dotted"><b>github</b><span class="v">github.com/zazanono/</span></div>
+      <div class="row dotted"><b>github</b><span class="v"><a class="ctc-link" href="https://github.com/zazanono/" target="_blank" rel="noopener noreferrer">github.com/zazanono/</a></span></div>
       <div class="row dotted"><b>phone</b><span class="v">+1 (514) 918-0757</span></div>
       <div class="row dotted"><b>timezone</b><span class="v">America/Montreal · EST</span></div>
-      <div class="row dotted"><b>resume</b><span class="v">PDF in the github repo (not updated)</span></div>
-      <div class="row"><b>linkedin</b><span class="v">linkedin.com/in/zacharienoel</span></div>
+      <div class="row dotted"><b>resume</b><span class="v"><a class="ctc-link" href="http://bit.ly/4dGY0bX" target="_blank" rel="noopener noreferrer">PDF (Click to view on GitHub)</a></span></div>
+      <div class="row"><b>linkedin</b><span class="v"><a class="ctc-link" href="https://linkedin.com/in/zacharienoel" target="_blank" rel="noopener noreferrer">linkedin.com/in/zacharienoel</a></span></div>
       <div class="send">
         TYPE <b style="color:var(--am)">HIRE &lt;Equity&gt; GO</b> + <span class="kbd">↵</span><br/>
         TO OPEN A POSITION. EXECUTION IS IMMEDIATE.
