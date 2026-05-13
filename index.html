@@ -19,7 +19,7 @@
     --g2:#c8ffd8;
     --cy:#5cc8ff;
     --cy-dim:#2a7aa8;
-    --am:#ffb43a;
+    --am:#ffdb3a;
     --am-dim:#a87317;
     --red:#ff5c5c;
     --ink:#000308;
@@ -88,11 +88,13 @@
     border:1px solid var(--hair-g);background:#020a0e;
     height:24px;overflow:hidden;white-space:nowrap;
     display:flex;align-items:center;font-size:12px;color:var(--g2);letter-spacing:.04em;
+    position:relative;
   }
-  .tkr .lbl{background:var(--g);color:#001a08;padding:3px 10px;font-weight:700;letter-spacing:.18em;margin-right:8px;font-size:11px}
-  .tkr .scroll{display:inline-block;animation:tick 70s linear infinite;padding-left:100%}
+  .tkr .lbl{background:var(--g);color:#001a08;padding:3px 10px;font-weight:700;letter-spacing:.18em;margin-right:8px;font-size:11px;position:relative;z-index:3}
+  .tkr .scroll{display:flex;width:max-content;animation:tick 30s linear infinite;padding-left:0;position:relative;z-index:1;transform:translateX(20%)}
+  .tkr .scroll__inner{display:inline-flex;gap:8px;align-items:center;padding-right:40px}
   .tkr .up{color:var(--g)} .tkr .dn{color:var(--red)} .tkr .am{color:var(--am)} .tkr .cy{color:var(--cy)}
-  @keyframes tick{to{transform:translateX(-100%)}}
+  @keyframes tick{from{transform:translateX(20%)}to{transform:translateX(-50%)}}
 
   /* MAIN GRID — 12 cols, fills remaining space */
   .grid{
@@ -173,7 +175,7 @@
   .ch-wrap{flex:1;min-height:0;position:relative;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
   .ch-wrap svg{position:absolute;inset:0;width:100%;height:100%;display:block}
   .ch-badge{
-    position:absolute;top:6px;right:8px;display:flex;gap:4px;align-items:center;
+    position:absolute;bottom:32px;right:32px;display:flex;gap:4px;align-items:center;
     font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--g);
     border:1px solid var(--g);padding:3px 8px;background:rgba(0,30,12,.75);
     z-index:3;
@@ -330,23 +332,48 @@
   <div class="tkr">
     <span class="lbl">STACK</span>
     <div class="scroll">
-      <span class="up">CSHARP ▲ +2.41</span> &nbsp;·&nbsp;
-      <span class="up">DOTNET ▲ +1.87</span> &nbsp;·&nbsp;
-      <span class="up">BLAZOR ▲ +4.66</span> &nbsp;·&nbsp;
-      <span class="dn">JAVA ▼ −0.62</span> &nbsp;·&nbsp;
-      <span class="up">PYTHON ▲ +3.12</span> &nbsp;·&nbsp;
-      <span class="up">TS_JS ▲ +0.94</span> &nbsp;·&nbsp;
-      <span class="up">C_LANG ▲ +1.08</span> &nbsp;·&nbsp;
-      <span class="am">RUST ◆ in training</span> &nbsp;·&nbsp;
-      <span class="up">VHDL ▲ +0.50</span> &nbsp;·&nbsp;
-      <span class="up">BASH ▲ stable</span> &nbsp;·&nbsp;
-      <span class="dn">PHP ▼ −2.40 legacy</span> &nbsp;·&nbsp;
-      <span class="am">AGENTS ◆ active research</span> &nbsp;·&nbsp;
-      <span class="up">SQL ▲ +0.31</span> &nbsp;·&nbsp;
-      <span class="cy">POSTGRES · TAILWIND · DOCKER · GIT · ZSH</span> &nbsp;·&nbsp;
-      <span class="up">MSGRAPH ▲ +1.12</span> &nbsp;·&nbsp;
-      <span class="up">SHAREPOINT ▲ +0.88</span> &nbsp;·&nbsp;
-      LAST UPDATE 11:23:09 EDT &nbsp;·&nbsp;
+      <div class="scroll__inner">
+        <span class="up">                             REACT ▲ +2.01</span> ·
+        <span class="up">TSX ▲ +2.01</span> ·
+        <span class="up">ASP.NET ▲ +1.87</span> ·
+        <span class="up">C# ▲ +2.41</span> ·
+        <span class="up">PCBs ▲ +4.66</span> ·
+        <span class="up">JAVA ▲ +0.62</span> ·
+        <span class="up">PYTHON ▲ +3.12</span> ·
+        <span class="up">JS ▲ +0.94</span> ·
+        <span class="up">ALTIUM ▲ +1.12</span> ·
+        <span class="up">C_LANG ▲ +1.08</span> ·
+        <span class="am">AI ◆ in training</span> ·
+        <span class="up">VHDL ▲ +0.50</span> ·
+        <span class="up">BASH ▲ stable</span> ·
+        <span class="dn">PHP ▼ −2.40 legacy</span> ·
+        <span class="am">AGENTS ◆ building right now</span> ·
+        <span class="up">SQL ▲ +0.31</span> ·
+        <span class="cy">POSTGRES · TAILWIND · DOCKER · GIT · ZSH</span> ·
+        <span class="up">KiCAD ▲ +0.88</span> ·
+        LAST UPDATE 11:23:09 EDT ·
+      </div>
+      <div class="scroll__inner" aria-hidden="true">
+        <span class="up">REACT ▲ +2.01</span> ·
+        <span class="up">TSX ▲ +2.01</span> ·
+        <span class="up">ASP.NET ▲ +1.87</span> ·
+        <span class="up">C# ▲ +2.41</span> ·
+        <span class="up">PCBs ▲ +4.66</span> ·
+        <span class="up">JAVA ▲ +0.62</span> ·
+        <span class="up">PYTHON ▲ +3.12</span> ·
+        <span class="up">JS ▲ +0.94</span> ·
+        <span class="up">ALTIUM ▲ +1.12</span> ·
+        <span class="up">C_LANG ▲ +1.08</span> ·
+        <span class="am">AI ◆ in training</span> ·
+        <span class="up">VHDL ▲ +0.50</span> ·
+        <span class="up">BASH ▲ stable</span> ·
+        <span class="dn">PHP ▼ −2.40 legacy</span> ·
+        <span class="am">AGENTS ◆ building right now</span> ·
+        <span class="up">SQL ▲ +0.31</span> ·
+        <span class="cy">POSTGRES · TAILWIND · DOCKER · GIT · ZSH</span> ·
+        <span class="up">KiCAD ▲ +0.88</span> ·
+        LAST UPDATE 11:23:09 EDT │
+      </div>
     </div>
   </div>
 
@@ -368,7 +395,7 @@
         <div><b>current</b>QualiTech · SWE Intern</div>
         <div><b>prior</b>Mcgill Formula Electric · PCBs</div>
         <div><b>grad</b>May 2029</div>
-        <div><b>status</b><span style="color:var(--am)">CLOSED ● Internship for S26 ✓</span></div>
+        <div><b>status</b><span style="color:var(--am)">HIRED ● Internship Summer 26 [✓]</span></div>
       </div>
       <div class="verdict">
         <div class="cell"><div class="k">52-WK HIGH</div><div class="vbig">148.90</div></div>
@@ -484,26 +511,27 @@
     <section class="pnl p-nw reveal">
       <div class="ph"><span class="nm">0006 / NW <em>news wire · ZNOEL</em></span><span class="fn"><b>F6</b></span></div>
       <ul>
-        <li><span class="ts">11:18</span><span class="src">BBG</span><span class="star">★</span><b>ZNOEL</b> ships agent-router v3 · routing latency down 38%</li>
-        <li><span class="ts">10:41</span><span class="src">RTRS</span><b>QualiTech</b> portal sees record uptime after Blazor refactor by Z.Noël</li>
-        <li><span class="ts">09:58</span><span class="src">DJ</span>Analysts upgrade <b>ZNOEL</b> to <span style="color:var(--g)">STRONG BUY</span> ahead of summer-26 cycle</li>
-        <li><span class="ts">08:33</span><span class="src">AP</span><b>VHDL CPU</b> wins course distinction at McGill ECSE</li>
-        <li><span class="ts">07:12</span><span class="src">BBG</span><b>10K race</b> on track · pace improves to 5:21/km from 5:48</li>
+        <li><span class="ts">11:18</span><span class="src">BBG</span><span class="star">★</span><b>ZNOEL</b> Has officially joined QualitechLM for this summer</li>
+        <li><span class="ts">10:41</span><span class="src">RTRS</span><b>@QualiTech</b> Building an Ai automation platform to streamline workflows</li>
+        <li><span class="ts">09:58</span><span class="src">DJ</span>Analysts upgrade <b>ZNOEL</b> to <span style="color:var(--g)">STRONG BUY</span> beginning of summer-26 cycle</li>
+        <li><span class="ts">08:33</span><span class="src">AP</span>After slightly disappointing 1st semester, concludes 2nd with <b>3.93 GPA</b></li>
+        <li><span class="ts">07:12</span><span class="src">BBG</span><b>10K race objective</b> on track · pace & distance improving every week</li>
       </ul>
     </section>
 
     <!-- ORDER BOOK -->
     <section class="pnl p-ob reveal">
       <div class="bid">
-        <div class="ph"><span class="nm">0007 / BIDS <em>employer demand</em></span><span class="fn"><b>F7</b></span></div>
-        <div class="row"><span style="color:var(--g)">faang · sde intern</span><span class="v up">5 lots @ 145.20</span></div>
-        <div class="row"><span style="color:var(--g)">yc startup · founding eng</span><span class="v up">3 lots @ 142.00</span></div>
-        <div class="row"><span style="color:var(--g)">enterprise · .NET</span><span class="v up">8 lots @ 138.50</span></div>
+        <div class="ph"><span class="nm">0007 / BIDS <em>My qualities</em></span><span class="fn"><b>F7</b></span></div>
+        <div class="row"><span style="color:var(--am)">Teamwork & Collaboration</span><span class="v up">5 lots @ 145.20</span></div>
+        <div class="row"><span style="color:var(--am)">Quick & eager to learn</span><span class="v up">3 lots @ 142.00</span></div>
+        <div class="row"><span style="color:var(--am)">Problem Solving & Critical Thinking</span><span class="v up">8 lots @ 138.50</span></div>
       </div>
       <div class="ask">
         <div class="ph"><span class="nm">0008 / ASKS <em>my terms</em></span><span class="fn"><b>F8</b></span></div>
-        <div class="row"><span style="color:var(--cy)">on-site · remote ok</span><span class="v">@ market</span></div>
-        <div class="row"><span style="color:var(--cy)">summer 26 · 16 wks</span><span class="v">@ market</span></div>
+        <div class="row"><span style="color:var(--cy)">on-site · remote (both ok)</span><span class="v">@ market</span></div>
+        <div class="row"><span style="color:var(--cy)">summer 27 · 12-16 wks</span><span class="v">@ market</span></div>
+        <div class="row"><span style="color:var(--cy)">(ideal, but open to different options)</span></div>
         <div class="row"><span style="color:var(--cy)">build real systems</span><span class="v am">non-negotiable</span></div>
       </div>
     </section>
@@ -512,11 +540,11 @@
     <section class="pnl p-ct reveal">
       <div class="ph"><span class="nm">0009 / CTC <em>contact desk</em></span><span class="fn"><b>F9</b></span></div>
       <div class="row dotted"><b>mail</b><span class="v">zacharie.noel@mail.mcgill.ca</span></div>
-      <div class="row dotted"><b>github</b><span class="v">github.com/znoel/</span></div>
+      <div class="row dotted"><b>github</b><span class="v">github.com/zazanono/</span></div>
       <div class="row dotted"><b>signal</b><span class="v">+1 (514) 918-0757</span></div>
       <div class="row dotted"><b>timezone</b><span class="v">America/Montreal · EST</span></div>
-      <div class="row dotted"><b>resume</b><span class="v">PDF · GO</span></div>
-      <div class="row"><b>linkedin</b><span class="v">/in/zacharienoel/</span></div>
+      <div class="row dotted"><b>resume</b><span class="v">PDF in the github repo (not updated)</span></div>
+      <div class="row"><b>linkedin</b><span class="v">linkedin.com/in/zacharienoel</span></div>
       <div class="send">
         TYPE <b style="color:var(--am)">HIRE &lt;Equity&gt; GO</b> + <span class="kbd">↵</span><br/>
         TO OPEN A POSITION. EXECUTION IS IMMEDIATE.
@@ -574,21 +602,49 @@
   function buildChart(){
     const N=60, W=600, H=220, pad=8;
     const cw = (W - pad*2)/N;
-    // generate
-    let price=72; const candles=[]; const closes=[];
-    for(let i=0;i<N;i++){
-      const drift = 1.05 + Math.sin(i/9)*0.25;        // up-trend
-      const vol = 1.6 + Math.random()*1.4;
-      const open = price;
-      const close = Math.max(50, open + drift + (Math.random()-.35)*vol*2);
-      const high = Math.max(open,close) + Math.random()*vol;
-      const low  = Math.min(open,close) - Math.random()*vol*0.8;
-      candles.push({open,high,low,close}); closes.push(close);
-      price = close;
+
+    // 1. Raw random walk with two pullback zones for realism
+    const raw=[0];
+    for(let i=1;i<N;i++){
+      const pb=(i>=12&&i<=17)||(i>=32&&i<=37);
+      const drift = pb ? -0.7 : 1.1;
+      const vol = 1.8 + Math.random()*2.0;
+      raw.push(raw[i-1] + drift + (Math.random()-.5)*vol*2.2);
     }
-    // normalize y: map 60..150 -> 200..20
-    const yMin=55, yMax=152;
-    const y = v => H - pad - ((v - yMin)/(yMax-yMin))*(H - pad*2);
+
+    // 2. Rescale: raw[0]→72, raw[N-1]→142
+    const r0=raw[0], rN=raw[N-1];
+    const scaledCloses = raw.map(v => 72 + (v-r0)/(rN-r0)*70);
+
+    // Force last 3 closes to each be strictly higher than the previous
+    for(let i=N-3;i<N;i++){
+      const prev = scaledCloses[i-1];
+      if(scaledCloses[i] <= prev) scaledCloses[i] = prev + 0.8 + Math.random()*1.4;
+    }
+
+    // 3. Build OHLC
+    const candles=[], closes=[];
+    for(let i=0;i<N;i++){
+      const close = scaledCloses[i];
+      const prevClose = i===0 ? close : scaledCloses[i-1];
+      // Last 3 candles: open below prevClose so body is green and price stepped up
+      const isLastThree = i >= N-3;
+      let open;
+      if(isLastThree){
+        open = prevClose - (0.1 + Math.random()*0.4); // gap up from prev close, open below new close
+      } else {
+        open = prevClose*(1+(Math.random()-.5)*0.008);
+      }
+      const range = Math.abs(close-open);
+      const wickH = range*0.4 + 0.4 + Math.random()*1.2;
+      const wickL = range*0.4 + 0.3 + Math.random()*1.0;
+      const high = Math.max(open,close)+wickH;
+      const low  = Math.min(open,close)-wickL;
+      candles.push({open,high,low,close}); closes.push(close);
+    }
+
+    // 4. Y: aligned to axis labels — price 150→y=14, price 70→y=190
+    const y = v => 14 + (150-v)*2.2;
 
     const root=document.getElementById('candles');
     candles.forEach((c,i)=>{
