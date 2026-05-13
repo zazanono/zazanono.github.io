@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ZNOEL &lt;Equity&gt; — Bloomberg Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" />
+<style>
+  /* =========================================================
+     PALETTE
+     green: phosphor primary  · cyan: secondary text/labels
+     amber: warnings / fn-keys  · red: down ticks  · navy: panels
+     ========================================================= */
+  :root{
+    --g:#39ff7a;
+    --g-dim:#1a8f44;
+    --g2:#c8ffd8;
+    --cy:#5cc8ff;
+    --cy-dim:#2a7aa8;
+    --am:#ffb43a;
+    --am-dim:#a87317;
+    --red:#ff5c5c;
+    --ink:#000308;
+    --panel:#04101c;
+    --panel-2:#061626;
+    --hair:rgba(92,200,255,.18);
+    --hair-g:rgba(57,255,122,.22);
+  }
+
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html,body{
+    height:100%;width:100%;overflow:hidden;
+    background:#000;color:var(--g);
+    font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.35;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+
+  /* CRT overlays — fixed only, performant. Toned-down vignette. */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:90;
+    background:
+      repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0,rgba(0,0,0,0) 2px,rgba(0,0,0,.16) 3px,rgba(0,0,0,0) 4px),
+      radial-gradient(ellipse at center,transparent 75%,rgba(0,0,0,.45) 100%);
+  }
+  body::after{
+    content:"";position:fixed;inset:-2%;pointer-events:none;z-index:91;
+    background:
+      radial-gradient(ellipse at 50% 50%,rgba(57,255,122,.035),transparent 65%),
+      radial-gradient(ellipse at 80% 30%,rgba(92,200,255,.035),transparent 60%);
+    mix-blend-mode:screen;
+  }
+
+  /* =========================================================
+     ROOT LAYOUT — exactly 100dvh, no scroll
+     ========================================================= */
+  .term{
+    height:100dvh;width:100vw;
+    display:grid;
+    grid-template-rows:auto auto 1fr auto auto;
+    background:linear-gradient(180deg,#000610 0%,#000308 60%,#00060d 100%);
+    padding:6px;gap:6px;
+  }
+
+  /* STATUS BAR (top) */
+  .status{
+    display:grid;grid-template-columns:auto 1fr auto;align-items:center;
+    background:linear-gradient(180deg,#02131f,#000a14);
+    border:1px solid var(--hair);padding:4px 10px;
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    height:26px;
+  }
+  .status .l{display:flex;gap:14px;align-items:center;color:var(--g2)}
+  .status .c{justify-self:center;color:var(--cy);font-weight:500;letter-spacing:.18em}
+  .status .r{display:flex;gap:14px;align-items:center;color:var(--g2);justify-self:end}
+  .status .live{color:var(--g);display:inline-flex;align-items:center;gap:6px}
+  .status .live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--g);box-shadow:0 0 8px var(--g);animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  .status .equity b{color:var(--g);font-weight:600}
+  .status .equity .up{color:var(--g)}
+  .status .sep{color:var(--cy-dim)}
+
+  /* TICKER (under status) — language/tech stack */
+  .tkr{
+    border:1px solid var(--hair-g);background:#020a0e;
+    height:24px;overflow:hidden;white-space:nowrap;
+    display:flex;align-items:center;font-size:12px;color:var(--g2);letter-spacing:.04em;
+  }
+  .tkr .lbl{background:var(--g);color:#001a08;padding:3px 10px;font-weight:700;letter-spacing:.18em;margin-right:8px;font-size:11px}
+  .tkr .scroll{display:inline-block;animation:tick 70s linear infinite;padding-left:100%}
+  .tkr .up{color:var(--g)} .tkr .dn{color:var(--red)} .tkr .am{color:var(--am)} .tkr .cy{color:var(--cy)}
+  @keyframes tick{to{transform:translateX(-100%)}}
+
+  /* MAIN GRID — 12 cols, fills remaining space */
+  .grid{
+    display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:repeat(12,1fr);
+    gap:6px;min-height:0;
+  }
+  .pnl{
+    background:linear-gradient(180deg,var(--panel) 0%,var(--panel-2) 100%);
+    border:1px solid var(--hair);
+    position:relative;padding:8px 10px 10px;display:flex;flex-direction:column;
+    min-height:0;overflow:hidden;
+  }
+  .pnl::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(180deg,rgba(92,200,255,.04),transparent 30%);
+  }
+  .pnl > *{position:relative}
+  .ph{
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--am);padding-bottom:5px;margin-bottom:7px;
+    border-bottom:1px dashed var(--hair-g);
+  }
+  .ph .nm{color:var(--am);font-weight:600}
+  .ph .nm em{font-style:normal;color:var(--cy);font-weight:400;margin-left:6px}
+  .ph .fn{color:var(--g2);font-weight:400}
+  .ph .fn b{color:var(--am);font-weight:600}
+
+  /* row utility */
+  .row{display:flex;justify-content:space-between;padding:2px 0;font-size:12px}
+  .row b{color:var(--cy);font-weight:400}
+  .row .v{color:var(--g2)}
+  .row .v.up{color:var(--g)} .row .v.dn{color:var(--red)} .row .v.am{color:var(--am)}
+  .dotted{border-bottom:1px dotted rgba(92,200,255,.15)}
+
+  .blink{display:inline-block;width:9px;height:13px;background:var(--g);vertical-align:-2px;animation:blk 1s steps(2) infinite}
+  @keyframes blk{50%{opacity:0}}
+
+  /* ====== PANEL POSITIONS ====== */
+
+  /* IDENTITY — left tall */
+  .p-id{grid-column:1 / span 4;grid-row:1 / span 7}
+  .p-id h1{
+    font-family:'JetBrains Mono',monospace;font-weight:700;
+    font-size:clamp(34px,3.4vw,52px);line-height:.98;letter-spacing:-.04em;
+    color:var(--g);text-shadow:0 0 8px rgba(57,255,122,.28);margin:10px 0 4px;
+  }
+  .p-id h1 i{color:var(--cy);font-style:normal;font-weight:700}
+  .p-id .sub{color:var(--cy);font-size:12.5px;letter-spacing:.08em;margin-bottom:14px}
+  .p-id .ascii{
+    font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.15;color:var(--g);
+    white-space:pre;text-shadow:0 0 4px rgba(57,255,122,.22);margin:10px 0 14px;
+  }
+  .p-id .meta{font-size:14px;line-height:1.7;flex:1}
+  .p-id .meta div{display:flex;gap:6px;padding:1px 0}
+  .p-id .meta b{color:var(--cy);font-weight:400;min-width:88px;letter-spacing:.02em}
+  .p-id .verdict{
+    margin-top:10px;border-top:1px dashed var(--hair-g);padding-top:8px;
+    display:grid;grid-template-columns:repeat(4,1fr);gap:4px;
+  }
+  .p-id .verdict .cell{padding:5px 7px;border:1px solid var(--hair);background:rgba(2,15,25,.6)}
+  .p-id .verdict .k{font-size:8.5px;letter-spacing:.14em;color:var(--cy);text-transform:uppercase}
+  .p-id .verdict .vbig{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:13px;color:var(--g);margin-top:2px;letter-spacing:-.01em}
+  .p-id .verdict .vbig.am{color:var(--am);font-size:11px}
+
+  /* CHART — center hero */
+  .p-ch{grid-column:5 / span 5;grid-row:1 / span 7;display:flex;flex-direction:column}
+  .ch-top{display:flex;justify-content:space-between;align-items:flex-end;padding:2px 4px 8px}
+  .ch-px{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:34px;color:var(--g);text-shadow:0 0 8px rgba(57,255,122,.25);line-height:1;letter-spacing:-.03em}
+  .ch-px small{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:13px;color:var(--cy);margin-left:8px;letter-spacing:.02em}
+  .ch-delta{font-size:13px;color:var(--g);margin-top:4px}
+  .ch-delta .red{color:var(--red)}
+  .ch-meta{text-align:right;font-size:11px;color:var(--g2);line-height:1.5}
+  .ch-meta b{color:var(--cy);font-weight:400}
+  .ch-tabs{display:flex;gap:2px;margin-top:4px;justify-content:flex-end}
+  .ch-tabs span{font-size:10px;padding:1px 6px;border:1px solid var(--hair);color:var(--cy)}
+  .ch-tabs span.on{background:var(--g);color:#001a08;border-color:var(--g)}
+  .ch-wrap{flex:1;min-height:0;position:relative;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+  .ch-wrap svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .ch-badge{
+    position:absolute;top:6px;right:8px;display:flex;gap:4px;align-items:center;
+    font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--g);
+    border:1px solid var(--g);padding:3px 8px;background:rgba(0,30,12,.75);
+    z-index:3;
+  }
+  .ch-badge::before{content:"●";color:var(--g);margin-right:4px;text-shadow:0 0 6px var(--g)}
+  .ch-foot{display:flex;justify-content:space-between;padding:6px 4px 0;font-size:10.5px;color:var(--cy);letter-spacing:.05em}
+  .ch-foot b{color:var(--g2);font-weight:400}
+
+  /* RATING — top right */
+  .p-rt{grid-column:10 / span 3;grid-row:1 / span 4}
+  .p-rt .big{
+    font-family:'JetBrains Mono',monospace;font-weight:800;font-size:32px;color:var(--g);
+    text-shadow:0 0 8px rgba(57,255,122,.28);margin:6px 0 2px;line-height:1;letter-spacing:-.04em;
+  }
+  .p-rt .target{font-size:12px;color:var(--cy);margin-bottom:6px}
+  .p-rt .target b{color:var(--g);font-weight:500}
+  .p-rt .ans{margin-top:4px}
+  .p-rt .ans .row{font-size:11.5px}
+  .p-rt .ans .bar{height:6px;background:rgba(57,255,122,.1);border:1px solid var(--hair-g);position:relative;margin:3px 0 6px}
+  .p-rt .ans .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--g);box-shadow:0 0 6px rgba(57,255,122,.4)}
+  .p-rt .ans .bar i.b{background:var(--cy);box-shadow:0 0 6px rgba(92,200,255,.4)}
+
+  /* VITALS / SPARKLINES — middle right */
+  .p-vt{grid-column:10 / span 3;grid-row:5 / span 3}
+  .spark{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px dotted rgba(92,200,255,.12);font-size:11.5px}
+  .spark:last-child{border-bottom:none}
+  .spark .k{color:var(--cy);min-width:54px;text-transform:uppercase;letter-spacing:.06em;font-size:10.5px}
+  .spark svg{flex:1;height:18px}
+  .spark .n{color:var(--g);min-width:36px;text-align:right;font-weight:500}
+
+  /* DEPLOYMENTS — bottom left mid */
+  .p-dp{grid-column:1 / span 4;grid-row:8 / span 5}
+  .p-dp .scroll{flex:1;overflow:hidden}
+  .p-dp .row{font-size:11.5px}
+  .tag{display:inline-block;padding:1px 5px;font-size:9.5px;letter-spacing:.12em;font-weight:600}
+  .tag.prod{background:rgba(57,255,122,.15);color:var(--g);border:1px solid rgba(57,255,122,.4)}
+  .tag.stg{background:rgba(255,180,58,.12);color:var(--am);border:1px solid rgba(255,180,58,.4)}
+  .tag.dev{background:rgba(92,200,255,.12);color:var(--cy);border:1px solid rgba(92,200,255,.4)}
+
+  /* NEWS WIRE — center bottom */
+  .p-nw{grid-column:5 / span 5;grid-row:8 / span 3}
+  .p-nw ul{list-style:none;flex:1;overflow:hidden;display:flex;flex-direction:column;gap:3px}
+  .p-nw li{font-size:11.5px;color:var(--g2);padding:2px 0;display:flex;gap:8px;align-items:baseline}
+  .p-nw li .ts{color:var(--cy);font-size:10px;letter-spacing:.06em;min-width:56px}
+  .p-nw li .src{color:var(--am);font-weight:600;font-size:10px;letter-spacing:.1em;min-width:54px;text-transform:uppercase}
+  .p-nw li b{color:var(--g);font-weight:500}
+  .p-nw li .star{color:var(--am)}
+
+  /* ORDER BOOK / contact / asks */
+  .p-ob{grid-column:5 / span 5;grid-row:11 / span 2;display:grid;grid-template-columns:1fr 1fr;gap:0;padding:0}
+  .p-ob > div{padding:8px 10px;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+  .p-ob > div + div{border-left:1px solid var(--hair)}
+  .p-ob .ph{margin-bottom:5px}
+  .p-ob .bid .ph .nm{color:var(--g)}
+  .p-ob .ask .ph .nm{color:var(--cy)}
+  .p-ob .row{font-size:11px;padding:1px 0}
+  .p-ob .row .v{font-size:11px}
+
+  /* CONTACT / signal */
+  .p-ct{grid-column:10 / span 3;grid-row:8 / span 5}
+  .p-ct .row{font-size:11.5px;padding:3px 0}
+  .p-ct .row b{color:var(--cy)}
+  .p-ct .row .v{color:var(--am)}
+  .p-ct .send{
+    margin-top:auto;border:1px solid var(--g);background:rgba(0,40,15,.4);
+    padding:6px 8px;font-size:11px;color:var(--g);letter-spacing:.08em;
+  }
+  .p-ct .send .kbd{display:inline-block;border:1px solid var(--g);padding:0 5px;color:var(--g2);margin:0 2px;font-size:10px}
+
+  /* COMMAND BAR */
+  .cmd{
+    display:flex;align-items:center;gap:0;height:32px;
+    background:linear-gradient(180deg,#02141f,#000a14);
+    border:1px solid var(--hair);
+  }
+  .cmd .lhs{display:flex;align-items:center;gap:10px;padding:0 12px;height:100%;border-right:1px solid var(--hair);color:var(--cy);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+  .cmd .lhs b{color:var(--am)}
+  .cmd .input{flex:1;display:flex;align-items:center;padding:0 12px;font-size:13px;color:var(--g);letter-spacing:.04em;overflow:hidden;white-space:nowrap}
+  .cmd .input .prefix{color:var(--cy);margin-right:8px;text-transform:uppercase;letter-spacing:.1em;font-size:11.5px}
+  .cmd .input .typed{color:var(--g);text-shadow:0 0 6px rgba(57,255,122,.3)}
+  .cmd .input .resp{color:var(--g2);margin-left:14px;font-size:11.5px}
+  .cmd .input .resp .am{color:var(--am)}
+  .cmd .input .resp .cy{color:var(--cy)}
+
+  /* FOOTER FN KEYS */
+  .fnbar{
+    display:grid;grid-template-columns:repeat(12,1fr);gap:3px;
+    font-size:10.5px;letter-spacing:.1em;height:22px;
+  }
+  .fk{display:flex;align-items:center;justify-content:center;gap:6px;background:#00131f;border:1px solid var(--hair);color:var(--g2);text-transform:uppercase}
+  .fk b{
+    display:inline-block;background:var(--am);color:#1a0d00;padding:1px 5px;font-weight:700;font-size:10px;letter-spacing:.05em;
+  }
+  .fk:nth-child(odd) b{background:var(--cy);color:#001625}
+  .fk:hover{background:#001f33;color:var(--g)}
+
+  /* small reveal */
+  .reveal{opacity:0;transform:translateY(6px);transition:opacity .6s cubic-bezier(.32,.72,0,1),transform .6s cubic-bezier(.32,.72,0,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  /* candle anim */
+  .cdl{opacity:0;transform-origin:bottom;animation:cdlIn .35s cubic-bezier(.32,.72,0,1) forwards}
+  @keyframes cdlIn{from{opacity:0;transform:scaleY(.2) translateY(8px)}to{opacity:1;transform:scaleY(1) translateY(0)}}
+  .ln-anim{stroke-dasharray:2000;stroke-dashoffset:2000;animation:lnDraw 4.5s cubic-bezier(.5,0,.3,1) forwards}
+  @keyframes lnDraw{to{stroke-dashoffset:0}}
+
+  /* ============== RESPONSIVE — fallback ============== */
+  @media (max-width:1100px){
+    html,body{overflow:auto;height:auto}
+    .term{height:auto;min-height:100dvh}
+    .grid{grid-template-columns:repeat(6,1fr);grid-template-rows:none}
+    .p-id,.p-ch,.p-rt,.p-vt,.p-dp,.p-nw,.p-ob,.p-ct{grid-column:1/-1;grid-row:auto}
+    .p-ch{height:340px}
+    .p-id .verdict{grid-template-columns:1fr 1fr 1fr 1fr}
+    .status{grid-template-columns:1fr;height:auto;text-align:center}
+    .status .c,.status .r{justify-self:center}
+    .fnbar{grid-template-columns:repeat(6,1fr);height:auto}
+    .fk{padding:4px 0}
+  }
+  @media (max-width:560px){
+    .ch-px{font-size:24px}
+    .p-id h1{font-size:28px}
+    .grid{grid-template-columns:1fr}
+    .p-id .verdict{grid-template-columns:1fr 1fr}
+    .p-ob{grid-template-columns:1fr}
+    .p-ob > div + div{border-left:none;border-top:1px solid var(--hair)}
+  }
+</style>
+</head>
+<body>
+
+<div class="term">
+
+  <!-- ================== TOP STATUS BAR ================== -->
+  <div class="status">
+    <div class="l">
+      <span class="live">MARKET OPEN</span>
+      <span class="sep">·</span>
+      <span>NASDAQ·DEV</span>
+      <span class="sep">·</span>
+      <span id="clock">11:23:14 EDT</span>
+    </div>
+    <div class="c">ZNOEL &lt;EQUITY&gt; · BLOOMBERG TERMINAL · v 26.05.13</div>
+    <div class="r equity">
+      <span>ZNOEL US Equity</span>
+      <b id="px">142.30</b>
+      <span class="up">▲ +2.41 (1.72%)</span>
+      <span class="sep">·</span>
+      <span>VOL 1.4M</span>
+    </div>
+  </div>
+
+  <!-- ================== TECH/LANGUAGE TICKER ================== -->
+  <div class="tkr">
+    <span class="lbl">STACK</span>
+    <div class="scroll">
+      <span class="up">CSHARP ▲ +2.41</span> &nbsp;·&nbsp;
+      <span class="up">DOTNET ▲ +1.87</span> &nbsp;·&nbsp;
+      <span class="up">BLAZOR ▲ +4.66</span> &nbsp;·&nbsp;
+      <span class="dn">JAVA ▼ −0.62</span> &nbsp;·&nbsp;
+      <span class="up">PYTHON ▲ +3.12</span> &nbsp;·&nbsp;
+      <span class="up">TS_JS ▲ +0.94</span> &nbsp;·&nbsp;
+      <span class="up">C_LANG ▲ +1.08</span> &nbsp;·&nbsp;
+      <span class="am">RUST ◆ in training</span> &nbsp;·&nbsp;
+      <span class="up">VHDL ▲ +0.50</span> &nbsp;·&nbsp;
+      <span class="up">BASH ▲ stable</span> &nbsp;·&nbsp;
+      <span class="dn">PHP ▼ −2.40 legacy</span> &nbsp;·&nbsp;
+      <span class="am">AGENTS ◆ active research</span> &nbsp;·&nbsp;
+      <span class="up">SQL ▲ +0.31</span> &nbsp;·&nbsp;
+      <span class="cy">POSTGRES · TAILWIND · DOCKER · GIT · ZSH</span> &nbsp;·&nbsp;
+      <span class="up">MSGRAPH ▲ +1.12</span> &nbsp;·&nbsp;
+      <span class="up">SHAREPOINT ▲ +0.88</span> &nbsp;·&nbsp;
+      LAST UPDATE 11:23:09 EDT &nbsp;·&nbsp;
+    </div>
+  </div>
+
+  <!-- ================== MAIN GRID ================== -->
+  <div class="grid">
+
+    <!-- IDENTITY -->
+    <section class="pnl p-id reveal">
+      <div class="ph"><span class="nm">0001 / SECURITY <em>Z. NOËL — Computer Eng · McGill</em></span><span class="fn"><b>F1</b></span></div>
+      <h1>Z. <i>NOËL</i></h1>
+      <div class="sub">// computer eng · mcgill u1 · laval, qc</div>
+      <pre class="ascii">┌─────────────────────────────────────┐
+│  &gt; full-stack · agents · systems    │
+│  &gt; runner · producer · keyboard-1st │
+│  &gt; building since 2021              │
+└─────────────────────────────────────┘</pre>
+      <div class="meta">
+        <div><b>name</b>Zacharie Noël</div>
+        <div><b>age</b>20 yrs</div>
+        <div><b>runtime</b>.NET 9 · OpenJDK 21 · CPython 3.12</div>
+        <div><b>hardware</b>M2 MacBook Air · MIMI shell</div>
+        <div><b>prior</b>QualiTech · SWE Intern</div>
+        <div><b>status</b><span style="color:var(--am)">OPEN ● to summer/fall 26 offers</span></div>
+      </div>
+      <div class="verdict">
+        <div class="cell"><div class="k">52-WK HIGH</div><div class="vbig">148.90</div></div>
+        <div class="cell"><div class="k">52-WK LOW</div><div class="vbig">62.10</div></div>
+        <div class="cell"><div class="k">P/E</div><div class="vbig am">undervalued</div></div>
+        <div class="cell"><div class="k">BETA</div><div class="vbig">0.84</div></div>
+      </div>
+    </section>
+
+    <!-- CHART -->
+    <section class="pnl p-ch reveal">
+      <div class="ph"><span class="nm">0002 / GIP <em>Graph · ZNOEL · 1Y · daily</em></span><span class="fn"><b>F2</b></span></div>
+      <div class="ch-top">
+        <div>
+          <div class="ch-px">142.30<small>USD</small></div>
+          <div class="ch-delta">▲ +2.41 (+1.72%) <span style="color:var(--cy);margin-left:8px">vs prev close 139.89</span></div>
+        </div>
+        <div class="ch-meta">
+          <div><b>open</b> 140.12 &nbsp; <b>high</b> 143.05</div>
+          <div><b>low</b> 139.40 &nbsp; <b>close</b> 142.30</div>
+          <div><b>vol</b> 1,403,221 &nbsp; <b>avg vol</b> 980k</div>
+          <div class="ch-tabs"><span>1D</span><span>1W</span><span>1M</span><span>6M</span><span class="on">1Y</span><span>5Y</span></div>
+        </div>
+      </div>
+      <div class="ch-wrap">
+        <div class="ch-badge">BUY · STRONG CONVICTION</div>
+        <svg id="chart" viewBox="0 0 600 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- grid -->
+          <g stroke="rgba(92,200,255,.10)" stroke-width=".5">
+            <line x1="0" y1="44" x2="600" y2="44"/>
+            <line x1="0" y1="88" x2="600" y2="88"/>
+            <line x1="0" y1="132" x2="600" y2="132"/>
+            <line x1="0" y1="176" x2="600" y2="176"/>
+            <line x1="100" y1="0" x2="100" y2="220"/>
+            <line x1="200" y1="0" x2="200" y2="220"/>
+            <line x1="300" y1="0" x2="300" y2="220"/>
+            <line x1="400" y1="0" x2="400" y2="220"/>
+            <line x1="500" y1="0" x2="500" y2="220"/>
+          </g>
+          <!-- price labels (right axis) -->
+          <g fill="rgba(92,200,255,.55)" font-family="IBM Plex Mono" font-size="8" text-anchor="end">
+            <text x="596" y="14">150</text>
+            <text x="596" y="58">130</text>
+            <text x="596" y="102">110</text>
+            <text x="596" y="146">90</text>
+            <text x="596" y="190">70</text>
+          </g>
+          <!-- moving average (cyan) -->
+          <path id="ma" class="ln-anim" fill="none" stroke="rgba(92,200,255,.55)" stroke-width="1" stroke-dasharray="3 3"/>
+          <!-- candles inserted by JS -->
+          <g id="candles"></g>
+          <!-- target line -->
+          <line x1="0" y1="20" x2="600" y2="20" stroke="rgba(255,180,58,.55)" stroke-width=".7" stroke-dasharray="2 4"/>
+          <text x="8" y="15" font-family="IBM Plex Mono" font-size="8.5" fill="rgba(255,180,58,.85)" letter-spacing=".05em">12M TARGET · 165.00 · HIRED</text>
+        </svg>
+      </div>
+      <div class="ch-foot">
+        <span><b>MAY '25</b></span>
+        <span><b>JUL</b></span>
+        <span><b>SEP</b></span>
+        <span><b>NOV</b></span>
+        <span><b>JAN '26</b></span>
+        <span><b>MAR</b></span>
+        <span><b>MAY '26</b> ◀ now</span>
+      </div>
+    </section>
+
+    <!-- RATING / ANALYST -->
+    <section class="pnl p-rt reveal">
+      <div class="ph"><span class="nm">0003 / ANR <em>Analyst recos</em></span><span class="fn"><b>F3</b></span></div>
+      <div class="big">STRONG BUY</div>
+      <div class="target">12-mo target <b>165.00</b> · upside <b style="color:var(--g)">+15.9%</b></div>
+      <div class="ans">
+        <div class="row"><b>strong buy</b><span class="v up">9</span></div>
+        <div class="bar"><i style="width:90%"></i></div>
+        <div class="row"><b>buy</b><span class="v cy">3</span></div>
+        <div class="bar"><i class="b" style="width:30%"></i></div>
+        <div class="row"><b>hold</b><span class="v am">1</span></div>
+        <div class="bar"><i style="width:10%;background:var(--am);box-shadow:0 0 6px rgba(255,180,58,.4)"></i></div>
+        <div class="row"><b>sell</b><span class="v">0</span></div>
+        <div class="bar"></div>
+      </div>
+    </section>
+
+    <!-- VITALS — sparklines -->
+    <section class="pnl p-vt reveal">
+      <div class="ph"><span class="nm">0004 / VIT <em>realtime telemetry</em></span><span class="fn"><b>F4</b></span></div>
+      <div class="spark"><span class="k">focus</span><svg viewBox="0 0 100 20" preserveAspectRatio="none"><polyline fill="none" stroke="var(--g)" stroke-width="1.2" points="0,16 10,14 20,15 30,11 40,12 50,8 60,9 70,6 80,7 90,4 100,3"/></svg><span class="n">91%</span></div>
+      <div class="spark"><span class="k">caffeine</span><svg viewBox="0 0 100 20" preserveAspectRatio="none"><polyline fill="none" stroke="var(--cy)" stroke-width="1.2" points="0,12 10,14 20,10 30,13 40,9 50,11 60,8 70,10 80,7 90,9 100,8"/></svg><span class="n">62%</span></div>
+      <div class="spark"><span class="k">VO₂</span><svg viewBox="0 0 100 20" preserveAspectRatio="none"><polyline fill="none" stroke="var(--g)" stroke-width="1.2" points="0,15 10,13 20,14 30,11 40,12 50,10 60,11 70,8 80,9 90,6 100,5"/></svg><span class="n">76%</span></div>
+      <div class="spark"><span class="k">commits</span><svg viewBox="0 0 100 20" preserveAspectRatio="none"><polyline fill="none" stroke="var(--g)" stroke-width="1.2" points="0,18 10,16 20,17 30,13 40,14 50,10 60,11 70,7 80,8 90,5 100,2"/></svg><span class="n">142</span></div>
+      <div class="spark"><span class="k">mood</span><svg viewBox="0 0 100 20" preserveAspectRatio="none"><polyline fill="none" stroke="var(--cy)" stroke-width="1.2" points="0,10 10,8 20,9 30,7 40,8 50,5 60,6 70,4 80,5 90,2 100,1"/></svg><span class="n">100%</span></div>
+    </section>
+
+    <!-- DEPLOYMENTS -->
+    <section class="pnl p-dp reveal">
+      <div class="ph"><span class="nm">0005 / DEP <em>deployments &amp; holdings</em></span><span class="fn"><b>F5</b></span></div>
+      <div class="scroll">
+        <div class="row dotted"><span style="color:var(--am)">› qualitech-portal</span><span class="tag prod">PROD</span></div>
+        <div class="row dotted"><span style="color:var(--am)">› blazor-sharepoint-sync</span><span class="tag prod">PROD</span></div>
+        <div class="row dotted"><span style="color:var(--am)">› graph-api-orchestrator</span><span class="tag prod">PROD</span></div>
+        <div class="row dotted"><span style="color:var(--am)">› mcgill-vhdl-cpu</span><span class="tag stg">STAGING</span></div>
+        <div class="row dotted"><span style="color:var(--am)">› agent-router-v3</span><span class="tag dev">RESEARCH</span></div>
+        <div class="row dotted"><span style="color:var(--am)">› beat-pipeline-cli</span><span class="tag prod">PERSONAL</span></div>
+        <div class="row dotted"><span style="color:var(--am)">› 10k-pace-calculator</span><span class="tag prod">PERSONAL</span></div>
+        <div class="row dotted"><b style="color:var(--cy)">uptime · 30d</b><span class="v up">99.4%</span></div>
+        <div class="row dotted"><b style="color:var(--cy)">commits · 30d</b><span class="v up">142</span></div>
+        <div class="row"><b style="color:var(--cy)">PRs merged · 30d</b><span class="v up">28</span></div>
+      </div>
+    </section>
+
+    <!-- NEWS WIRE -->
+    <section class="pnl p-nw reveal">
+      <div class="ph"><span class="nm">0006 / NW <em>news wire · ZNOEL</em></span><span class="fn"><b>F6</b></span></div>
+      <ul>
+        <li><span class="ts">11:18</span><span class="src">BBG</span><span class="star">★</span><b>ZNOEL</b> ships agent-router v3 · routing latency down 38%</li>
+        <li><span class="ts">10:41</span><span class="src">RTRS</span><b>QualiTech</b> portal sees record uptime after Blazor refactor by Z.Noël</li>
+        <li><span class="ts">09:58</span><span class="src">DJ</span>Analysts upgrade <b>ZNOEL</b> to <span style="color:var(--g)">STRONG BUY</span> ahead of summer-26 cycle</li>
+        <li><span class="ts">08:33</span><span class="src">AP</span><b>VHDL CPU</b> wins course distinction at McGill ECSE</li>
+        <li><span class="ts">07:12</span><span class="src">BBG</span><b>10K race</b> on track · pace improves to 5:21/km from 5:48</li>
+      </ul>
+    </section>
+
+    <!-- ORDER BOOK -->
+    <section class="pnl p-ob reveal">
+      <div class="bid">
+        <div class="ph"><span class="nm">0007 / BIDS <em>employer demand</em></span><span class="fn"><b>F7</b></span></div>
+        <div class="row"><span style="color:var(--g)">faang · sde intern</span><span class="v up">5 lots @ 145.20</span></div>
+        <div class="row"><span style="color:var(--g)">yc startup · founding eng</span><span class="v up">3 lots @ 142.00</span></div>
+        <div class="row"><span style="color:var(--g)">enterprise · .NET</span><span class="v up">8 lots @ 138.50</span></div>
+      </div>
+      <div class="ask">
+        <div class="ph"><span class="nm">0008 / ASKS <em>my terms</em></span><span class="fn"><b>F8</b></span></div>
+        <div class="row"><span style="color:var(--cy)">remote · hybrid ok</span><span class="v">@ market</span></div>
+        <div class="row"><span style="color:var(--cy)">summer 26 · 16 wks</span><span class="v">@ market</span></div>
+        <div class="row"><span style="color:var(--cy)">build real systems</span><span class="v am">non-negotiable</span></div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="pnl p-ct reveal">
+      <div class="ph"><span class="nm">0009 / CTC <em>contact desk</em></span><span class="fn"><b>F9</b></span></div>
+      <div class="row dotted"><b>mail</b><span class="v">zacharie.noel@mail.mcgill.ca</span></div>
+      <div class="row dotted"><b>github</b><span class="v">github.com/znoel</span></div>
+      <div class="row dotted"><b>signal</b><span class="v">+1 ··· on request</span></div>
+      <div class="row dotted"><b>tz</b><span class="v">America/Toronto · EDT</span></div>
+      <div class="row dotted"><b>resume</b><span class="v">PDF · GO</span></div>
+      <div class="row"><b>linkedin</b><span class="v">/in/zacharie-noel</span></div>
+      <div class="send">
+        TYPE <b style="color:var(--am)">HIRE &lt;Equity&gt; GO</b> + <span class="kbd">↵</span><br/>
+        TO OPEN A POSITION. EXECUTION IS IMMEDIATE.
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ================== COMMAND BAR ================== -->
+  <div class="cmd">
+    <div class="lhs"><b>›</b> ZNOEL &lt;Equity&gt;</div>
+    <div class="input">
+      <span class="prefix">znoel@bbg ‹cmd›</span>
+      <span class="typed" id="typed"></span><span class="blink"></span>
+      <span class="resp" id="resp"></span>
+    </div>
+  </div>
+
+  <!-- ================== FN KEYS ================== -->
+  <div class="fnbar">
+    <div class="fk"><b>F1</b> SEC</div>
+    <div class="fk"><b>F2</b> GIP</div>
+    <div class="fk"><b>F3</b> ANR</div>
+    <div class="fk"><b>F4</b> VIT</div>
+    <div class="fk"><b>F5</b> DEP</div>
+    <div class="fk"><b>F6</b> NW</div>
+    <div class="fk"><b>F7</b> BID</div>
+    <div class="fk"><b>F8</b> ASK</div>
+    <div class="fk"><b>F9</b> CTC</div>
+    <div class="fk"><b>F10</b> HELP</div>
+    <div class="fk"><b>F11</b> EXPORT</div>
+    <div class="fk"><b>ESC</b> EXIT</div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+
+  // ============ REVEALS ============
+  document.querySelectorAll('.reveal').forEach((el,i)=>{
+    setTimeout(()=>el.classList.add('in'), 120 + i*70);
+  });
+
+  // ============ CLOCK ============
+  function clock(){
+    const d=new Date();
+    const pad=n=>String(n).padStart(2,'0');
+    document.getElementById('clock').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} EDT`;
+  }
+  clock();setInterval(clock,1000);
+
+  // ============ CHART — synthetic OHLC that trends up ============
+  // 60 candles · width 600 / height 220
+  function buildChart(){
+    const N=60, W=600, H=220, pad=8;
+    const cw = (W - pad*2)/N;
+    // generate
+    let price=72; const candles=[]; const closes=[];
+    for(let i=0;i<N;i++){
+      const drift = 1.05 + Math.sin(i/9)*0.25;        // up-trend
+      const vol = 1.6 + Math.random()*1.4;
+      const open = price;
+      const close = Math.max(50, open + drift + (Math.random()-.35)*vol*2);
+      const high = Math.max(open,close) + Math.random()*vol;
+      const low  = Math.min(open,close) - Math.random()*vol*0.8;
+      candles.push({open,high,low,close}); closes.push(close);
+      price = close;
+    }
+    // normalize y: map 60..150 -> 200..20
+    const yMin=55, yMax=152;
+    const y = v => H - pad - ((v - yMin)/(yMax-yMin))*(H - pad*2);
+
+    const root=document.getElementById('candles');
+    candles.forEach((c,i)=>{
+      const x = pad + i*cw + cw/2;
+      const up = c.close>=c.open;
+      const color = up ? '#39ff7a' : '#ff5c5c';
+      const wickY1=y(c.high), wickY2=y(c.low);
+      const bodyTop=y(Math.max(c.open,c.close));
+      const bodyBot=y(Math.min(c.open,c.close));
+      const bodyH = Math.max(1,bodyBot-bodyTop);
+
+      const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+      g.setAttribute('class','cdl');
+      g.style.animationDelay=(i*45)+'ms';
+
+      const wick=document.createElementNS('http://www.w3.org/2000/svg','line');
+      wick.setAttribute('x1',x);wick.setAttribute('x2',x);
+      wick.setAttribute('y1',wickY1);wick.setAttribute('y2',wickY2);
+      wick.setAttribute('stroke',color);wick.setAttribute('stroke-width','.9');
+      g.appendChild(wick);
+
+      const body=document.createElementNS('http://www.w3.org/2000/svg','rect');
+      body.setAttribute('x', x - cw*0.32);
+      body.setAttribute('y', bodyTop);
+      body.setAttribute('width', cw*0.64);
+      body.setAttribute('height', bodyH);
+      body.setAttribute('fill', up ? color : '#1a1a1a');
+      body.setAttribute('stroke', color);
+      body.setAttribute('stroke-width','.8');
+      if(up) body.setAttribute('opacity','.92');
+      g.appendChild(body);
+
+      root.appendChild(g);
+    });
+
+    // moving average (7-period)
+    const ma=[];
+    for(let i=0;i<N;i++){
+      const s=Math.max(0,i-6);
+      const slice=closes.slice(s,i+1);
+      ma.push(slice.reduce((a,b)=>a+b,0)/slice.length);
+    }
+    const maPath = ma.map((v,i)=>{
+      const x = pad + i*cw + cw/2;
+      return (i===0?'M ':'L ')+x.toFixed(1)+' '+y(v).toFixed(1);
+    }).join(' ');
+    document.getElementById('ma').setAttribute('d', maPath);
+
+    // animate live price tick around the displayed price (142.30)
+    const px=document.getElementById('px');
+    const target = 142.30;
+    let shown = target - 3;
+    const tick=()=>{
+      // mean-revert toward target + tiny jitter, clamp
+      shown += (target - shown)*0.08 + (Math.random()-.5)*0.18;
+      shown = Math.max(target-1.2, Math.min(target+1.2, shown));
+      px.textContent = shown.toFixed(2);
+    };
+    setInterval(tick,260);
+  }
+  buildChart();
+
+  // ============ COMMAND-LINE typer ============
+  const seq = [
+    {cmd:'ZNOEL <Equity> GO', resp:'<span class="am">› loading security profile…</span> done.'},
+    {cmd:'DES GO', resp:'<span class="cy">description:</span> CS-Eng @ McGill, full-stack &amp; agents. open S26.'},
+    {cmd:'GIP 1Y GO', resp:'<span class="am">› chart loaded</span> · 60 sessions · trend <span class="am">+ 92%</span>'},
+    {cmd:'ANR GO', resp:'<span class="cy">analyst consensus:</span> <span class="am">STRONG BUY</span> · 13 covering desks'},
+    {cmd:'EARN GO', resp:'<span class="cy">last quarter:</span> shipped 3 prod systems · beat consensus'},
+    {cmd:'NEWS GO', resp:'<span class="am">› wire active</span> · 5 stories in last 4 h'},
+    {cmd:'HIRE <Equity> GO', resp:'<span class="am">› order routed</span> · awaiting your bid…'},
+    {cmd:'HELP', resp:'<span class="cy">type</span> ZNOEL &lt;Equity&gt; · DES · GIP · ANR · NEWS · HIRE'},
+  ];
+  const typedEl=document.getElementById('typed'), respEl=document.getElementById('resp');
+  let si=0,ci=0,phase='typing',pause=0;
+  function step(){
+    const cur=seq[si];
+    if(phase==='typing'){
+      ci++;
+      typedEl.textContent=cur.cmd.slice(0,ci);
+      respEl.innerHTML='';
+      if(ci>=cur.cmd.length){phase='waiting';pause=0;}
+      setTimeout(step, 55 + Math.random()*40);
+    } else if(phase==='waiting'){
+      pause++;
+      if(pause===6){respEl.innerHTML=cur.resp;}
+      if(pause>=46){phase='clearing';}
+      setTimeout(step,80);
+    } else if(phase==='clearing'){
+      ci--;
+      typedEl.textContent=cur.cmd.slice(0,ci);
+      if(ci<=0){phase='typing';respEl.innerHTML='';si=(si+1)%seq.length;}
+      setTimeout(step,25);
+    }
+  }
+  setTimeout(step,800);
+
+})();
+</script>
+</body>
+</html>
